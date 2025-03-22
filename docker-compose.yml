@@ -5,11 +5,11 @@ services:
   contacts.db:
     image: mcr.microsoft.com/mssql/server:2022-latest
 
-  contactmanager.apigateway:
-    image: ${DOCKER_REGISTRY-}contactmanagerapigateway
+  contact-persistence:
+    image: ${DOCKER_REGISTRY-}contact-persistence
     build:
-      context: .
-      dockerfile: ContactManager.ApiGateway/Dockerfile
+      context: ./Services/ContactPersistence
+      dockerfile: ContactPersistence/Dockerfile
 
   create-contact.api:
     image: ${DOCKER_REGISTRY-}create-contact.api
@@ -17,8 +17,8 @@ services:
       context: ./Services/CreateContact-API
       dockerfile: src/CreateContact.API/Dockerfile
 
-  contact-persistence:
-    image: ${DOCKER_REGISTRY-}contact-persistence
+  contactmanager.apigateway:
+    image: ${DOCKER_REGISTRY-}contactmanager.apigateway
     build:
-      context: ./Services/ContactPersistence
-      dockerfile: ContactPersistence/Dockerfile
+      context: .
+      dockerfile: ContactManager.ApiGateway/Dockerfile
