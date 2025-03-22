@@ -1,0 +1,117 @@
+services:
+  messagebroker:
+    container_name: contactmanager-messagebroker
+    #hostname: messagebroker
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - contactmanager-network
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  contacts.db:
+    container_name: contactmanager-db
+    hostname: mssql
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=P@ssw0rd1
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S mssql -U sa -P P@ssw0rd1 -Q 'SELECT 1' -C"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - contactmanager-network
+    restart: unless-stopped
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql-data:/var/opt/mssql
+
+  contact-persistence:
+    container_name: contact-persistence
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - ConnectionStrings__Database=Server=mssql;Database=ContactManagerDb;User Id=sa;Password=P@ssw0rd1;Encrypt=False;TrustServerCertificate=True
+      - MessageBroker__Host=messagebroker
+      - MessageBroker__UserName=guest
+      - MessageBroker__Password=guest
+    depends_on:
+      messagebroker:
+        condition: service_healthy
+      contacts.db:
+        condition: service_healthy
+    networks:
+      - contactmanager-network
+    restart: unless-stopped
+    ports:
+      - "6003:8080"
+      - "6063:8081"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+  create-contact.api:
+    container_name: create-contact.api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - ConnectionStrings__Database=Server=mssql;Database=ContactManagerDb;User Id=sa;Password=P@ssw0rd1;Encrypt=False;TrustServerCertificate=True
+      - MessageBroker__Host=messagebroker
+      - MessageBroker__UserName=guest
+      - MessageBroker__Password=guest
+    depends_on:
+      messagebroker:
+        condition: service_healthy
+      contacts.db:
+        condition: service_healthy
+    networks:
+      - contactmanager-network
+    restart: unless-stopped
+    ports:
+      - "6000:8080"
+      - "6060:8081"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+  contactmanager.apigateway:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+    depends_on:
+      - create-contact.api
+    networks:
+      - contactmanager-network
+    restart: unless-stopped
+    ports:
+      - "6004:8080"
+      - "6064:8081"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+networks:
+  contactmanager-network:
+    driver: bridge
+
+volumes:
+  sql-data:

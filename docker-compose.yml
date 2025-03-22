@@ -1,0 +1,24 @@
+services:
+  messagebroker:
+    image: rabbitmq:management-alpine
+
+  contacts.db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+
+  contactmanager.apigateway:
+    image: ${DOCKER_REGISTRY-}contactmanagerapigateway
+    build:
+      context: .
+      dockerfile: ContactManager.ApiGateway/Dockerfile
+
+  create-contact.api:
+    image: ${DOCKER_REGISTRY-}create-contact.api
+    build:
+      context: ./Services/CreateContact-API
+      dockerfile: src/CreateContact.API/Dockerfile
+
+  contact-persistence:
+    image: ${DOCKER_REGISTRY-}contact-persistence
+    build:
+      context: ./Services/ContactPersistence
+      dockerfile: ContactPersistence/Dockerfile
