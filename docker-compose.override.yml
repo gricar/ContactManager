@@ -41,7 +41,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
-      - ASPNETCORE_HTTPS_PORTS=8081
+      #- ASPNETCORE_HTTPS_PORTS=8081
       - ConnectionStrings__Database=Server=mssql;Database=ContactManagerDb;User Id=sa;Password=P@ssw0rd1;Encrypt=False;TrustServerCertificate=True
       - MessageBroker__Host=messagebroker
       - MessageBroker__UserName=guest
@@ -56,7 +56,7 @@ services:
     restart: unless-stopped
     ports:
       - "6001:8080"
-      - "6061:8081"
+      #- "6061:8081"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
@@ -68,7 +68,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
-      - ASPNETCORE_HTTPS_PORTS=8081
+      #- ASPNETCORE_HTTPS_PORTS=8081
       - ConnectionStrings__Database=Server=mssql;Database=ContactManagerDb;User Id=sa;Password=P@ssw0rd1;Encrypt=False;TrustServerCertificate=True
       - MessageBroker__Host=messagebroker
       - MessageBroker__UserName=guest
@@ -83,7 +83,35 @@ services:
     restart: unless-stopped
     ports:
       - "6002:8080"
-      - "6062:8081"
+      #- "6062:8081"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+  delete-contact.api:
+    container_name: delete-contact.api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      #- ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_HTTP_PORTS=8080
+      #- ASPNETCORE_HTTPS_PORTS=8081
+      - ConnectionStrings__Database=Server=mssql;Database=ContactManagerDb;User Id=sa;Password=P@ssw0rd1;Encrypt=False;TrustServerCertificate=True
+      - MessageBroker__Host=messagebroker
+      - MessageBroker__UserName=guest
+      - MessageBroker__Password=guest
+    depends_on:
+      messagebroker:
+        condition: service_healthy
+      contacts.db:
+        condition: service_healthy
+    networks:
+      - contactmanager-network
+    restart: unless-stopped
+    ports:
+      - "6003:8080"
+      #- "6063:8081"
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
@@ -96,8 +124,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
-    depends_on:
-      - create-contact.api
+    depends_on: [create-contact.api, delete-contact.api]
     networks:
       - contactmanager-network
     restart: unless-stopped
