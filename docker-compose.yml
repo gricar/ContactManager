@@ -1,60 +1,36 @@
 services:
   messagebroker:
     image: rabbitmq:management-alpine
-    deploy:
-      resources:
-        limits:
-          cpus: "1.0"
-          memory: "512M"
 
   contacts.db:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    deploy:
-      resources:
-        limits:
-          cpus: "2.0"
-          memory: "2G"
 
   contact-persistence:
     image: ${DOCKER_REGISTRY-}contact-persistence
     build:
       context: ./Services/ContactPersistence
       dockerfile: ContactPersistence/Dockerfile
-    deploy:
-      resources:
-        limits:
-          cpus: "1.0"
-          memory: "512M"
 
   create-contact.api:
     image: ${DOCKER_REGISTRY-}create-contact.api
     build:
       context: ./Services/CreateContact-API
       dockerfile: src/CreateContact.API/Dockerfile
-    deploy:
-      resources:
-        limits:
-          cpus: "1.0"
-          memory: "512M"
 
   delete-contact.api:
     image: ${DOCKER_REGISTRY-}delete-contact.api
     build:
       context: ./Services/DeleteContact
       dockerfile: src/DeleteContact.API/Dockerfile
-    deploy:
-      resources:
-        limits:
-          cpus: "1.0"
-          memory: "512M"
+
+  update-contact.api:
+    image: ${DOCKER_REGISTRY-}update-contact.api
+    build: 
+      context: ./Services/UpdateContact-API
+      dockerfile: src/UpdateContact.API/Dockerfile
 
   contactmanager.apigateway:
     image: ${DOCKER_REGISTRY-}contactmanager.apigateway
     build:
       context: .
       dockerfile: ContactManager.ApiGateway/Dockerfile
-    deploy:
-      resources:
-        limits:
-          cpus: "1.0"
-          memory: "512M"

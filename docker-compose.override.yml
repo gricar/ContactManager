@@ -20,6 +20,11 @@ services:
   contacts.db:
     container_name: contactmanager-db
     hostname: mssql
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: "2G"
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=P@ssw0rd1
@@ -118,13 +123,38 @@ services:
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
 
+  update-contact.api:
+    container_name: update-contact.api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ConnectionStrings__Database=Server=mssql;Database=ContactManagerDb;User Id=sa;Password=P@ssw0rd1;Encrypt=False;TrustServerCertificate=True
+      - MessageBroker__Host=messagebroker
+      - MessageBroker__UserName=guest
+      - MessageBroker__Password=guest
+    depends_on:
+      messagebroker:
+        condition: service_healthy
+      contacts.db:
+        condition: service_healthy
+    networks:
+      - contactmanager-network
+    restart: unless-stopped
+    ports:
+      - "6004:8080"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
   contactmanager.apigateway:
     container_name: contactmanager.apigateway
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
-    depends_on: [create-contact.api, delete-contact.api]
+    depends_on: [create-contact.api, delete-contact.api, update-contact.api]
     networks:
       - contactmanager-network
     restart: unless-stopped
@@ -143,3 +173,4 @@ networks:
 
 volumes:
   sql-data:
+  
