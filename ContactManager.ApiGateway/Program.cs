@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.RateLimiting;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,10 @@ var app = builder.Build();
 app.UseRateLimiter();
 
 app.MapReverseProxy();
+
+app.UseMetricServer();
+
+app.UseHttpMetrics();
 
 app.MapGet("/", () => "Hello Api Gateway!");
 

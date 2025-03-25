@@ -167,10 +167,36 @@ services:
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
 
+  contactmanager.prometheus:
+    container_name: contactmanager.prometheus
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    networks:
+      - contactmanager-network
+
+  contactmanager.grafana:
+    container_name: contactmanager.grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+    networks:
+      - contactmanager-network
+
 networks:
   contactmanager-network:
     driver: bridge
 
 volumes:
   sql-data:
-  
+  prometheus-data:
+  grafana-data:
+    
