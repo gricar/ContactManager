@@ -34,3 +34,9 @@ services:
     build:
       context: .
       dockerfile: ContactManager.ApiGateway/Dockerfile
+
+  contactmanager.prometheus:
+    image: prom/prometheus:latest
+
+  contactmanager.grafana:
+    image: grafana/grafana:latest
