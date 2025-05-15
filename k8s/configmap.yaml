@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-gateway-config
+data:
+  CreateClusterAddress: "http://create-contact-svc:8080"
+  DeleteClusterAddress: "http://delete-contact-svc:8080"
+  UpdateClusterAddress: "http://update-contact-svc:8080"

@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  labels:
+    app: contact-api
+    service: gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: contact-api
+      service: gateway
+  template:
+    metadata:
+      labels:
+        app: contact-api
+        service: gateway
+    spec:
+      containers:
+        - name: contact-api-gateway
+          image: gricardo10/contact-api-gateway:1.0.1
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ReverseProxy__Clusters__create-api-cluster__Destinations__http-destination__Address
+              valueFrom:
+                configMapKeyRef:
+                  name: api-gateway-config
+                  key: CreateClusterAddress
+            - name: ReverseProxy__Clusters__delete-api-cluster__Destinations__http-destination__Address
+              valueFrom:
+                configMapKeyRef:
+                  name: api-gateway-config
+                  key: DeleteClusterAddress
+            - name: ReverseProxy__Clusters__update-api-cluster__Destinations__http-destination__Address
+              valueFrom:
+                configMapKeyRef:
+                  name: api-gateway-config
+                  key: UpdateClusterAddress
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 35
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "500m"
+            limits:
+              memory: "512Mi"
+              cpu: "1"
